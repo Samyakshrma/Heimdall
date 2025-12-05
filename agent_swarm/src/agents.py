@@ -1,11 +1,12 @@
 import os
 from langchain_openai import AzureChatOpenAI
-from langchain.agents import AgentExecutor, create_openai_tools_agent
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from src.tools import ALL_TOOLS
 
+# --- STANDARD IMPORT ---
+from langchain.agents import AgentExecutor, create_tool_calling_agent
+
 # --- LLM Initialization (Azure) ---
-# We use AzureChatOpenAI instead of ChatOpenAI
 llm = AzureChatOpenAI(
     azure_deployment=os.environ.get("AZURE_OPENAI_DEPLOYMENT_NAME"),
     openai_api_version=os.environ.get("AZURE_OPENAI_API_VERSION"),
@@ -15,11 +16,16 @@ llm = AzureChatOpenAI(
 )
 
 def build_agent_executor(tools, system_prompt):
+    # CRITICAL FIX: Added 'agent_scratchpad' placeholder
     prompt = ChatPromptTemplate.from_messages([
         ("system", system_prompt),
         MessagesPlaceholder(variable_name="messages"),
+        MessagesPlaceholder(variable_name="agent_scratchpad"), 
     ])
-    agent = create_openai_tools_agent(llm, tools, prompt)
+    
+    agent = create_tool_calling_agent(llm, tools, prompt)
+    
+    # We return the executor, which runs the agent loop
     return AgentExecutor(agent=agent, tools=tools, verbose=True)
 
 # --- Agent Definitions ---
@@ -39,6 +45,6 @@ ACTION_PROMPT = """You are the Action SRE.
 3. Report the result."""
 
 # Executors
-triage_executor = build_agent_executor([ALL_TOOLS[2]], TRIAGE_PROMPT) # get_recent_commits
-diagnose_executor = build_agent_executor([ALL_TOOLS[3]], DIAGNOSE_PROMPT) # get_commit_diff
-action_executor = build_agent_executor([ALL_TOOLS[4], ALL_TOOLS[5]], ACTION_PROMPT) # revert, slack
+triage_executor = build_agent_executor([ALL_TOOLS[2]], TRIAGE_PROMPT) 
+diagnose_executor = build_agent_executor([ALL_TOOLS[3]], DIAGNOSE_PROMPT) 
+action_executor = build_agent_executor([ALL_TOOLS[4], ALL_TOOLS[5]], ACTION_PROMPT)
