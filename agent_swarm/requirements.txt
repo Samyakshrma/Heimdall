@@ -1,0 +1,7 @@
+langchain
+langchain_openai
+langgraph
+requests
+gitpython
+slack_sdk
+python-dotenv
