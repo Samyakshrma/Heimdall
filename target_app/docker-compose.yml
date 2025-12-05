@@ -1,0 +1,9 @@
+version: '3.8'
+services:
+  webapp:
+    build: .
+    container_name: target-app-container
+    ports:
+      - "5000:5000"
+    environment:
+      - DB_HOST=prod-db.example.com
